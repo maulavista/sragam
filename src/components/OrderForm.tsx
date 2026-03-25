@@ -407,6 +407,13 @@ function StepUkuran({
 }
 
 function StepAnggaran({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const formatted = value ? parseInt(value).toLocaleString('id-ID') : ''
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value.replace(/\./g, '').replace(/[^0-9]/g, '')
+    onChange(raw)
+  }
+
   return (
     <div>
       <h3 className="text-gray-900 font-bold text-lg mb-1">Berapa anggaran yang disiapkan?</h3>
@@ -414,11 +421,11 @@ function StepAnggaran({ value, onChange }: { value: string; onChange: (v: string
       <div className="relative">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">Rp</span>
         <input
-          type="number"
-          min="0"
+          type="text"
+          inputMode="numeric"
           placeholder="0"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={formatted}
+          onChange={handleChange}
           className="w-full pl-10 pr-4 py-3 rounded-lg border border-gray-200 text-gray-900 text-sm focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
         />
       </div>
