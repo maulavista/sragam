@@ -14,6 +14,11 @@ export const metadata: Metadata = {
       'Ceritakan kebutuhan seragam sekali. Kami susun dengan rapi dan kirim ke beberapa supplier. Terima penawaran yang jelas dan mudah dibandingkan.',
     type: 'website',
     locale: 'id_ID',
+    images: [{ url: '/og-image.png', width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    images: ['/og-image.png'],
   },
 }
 
