@@ -6,6 +6,7 @@ import { Resend } from 'resend'
 const orderItemSchema = z.object({
   jenis_seragam: z.string().min(1),
   jumlah: z.string().min(1),
+  ukuran: z.record(z.number()).optional(),
   bahan: z.string().optional(),
   metode_logo: z.string().optional(),
 })
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
           order_id: order.id,
           jenis_seragam: item.jenis_seragam,
           jumlah: parseInt(item.jumlah, 10),
+          ukuran: item.ukuran && Object.keys(item.ukuran).length > 0 ? item.ukuran : null,
           bahan: item.bahan ?? null,
           metode_logo: item.metode_logo ?? null,
         }))

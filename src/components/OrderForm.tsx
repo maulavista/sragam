@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 type OrderItem = {
   jenis_seragam: string
   jumlah: string
+  ukuran: Record<string, number>
   bahan: string
   metode_logo: string
 }
@@ -26,6 +27,7 @@ type Phase =
   | 'organisasi'
   | 'item-produk'
   | 'item-jumlah'
+  | 'item-ukuran'
   | 'item-bahan'
   | 'item-logo'
   | 'item-review'
@@ -333,6 +335,11 @@ function StepItemReview({ items, onAddMore }: { items: OrderItem[]; onAddMore: (
                 {item.bahan ? ` · ${item.bahan}` : ''}
                 {item.metode_logo ? ` · ${item.metode_logo}` : ''}
               </p>
+              {Object.values(item.ukuran).some(v => v > 0) && (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {SIZES.filter(s => (item.ukuran[s] || 0) > 0).map(s => `${s}: ${item.ukuran[s]}`).join(', ')}
+                </p>
+              )}
             </div>
           </div>
         ))}
@@ -345,6 +352,56 @@ function StepItemReview({ items, onAddMore }: { items: OrderItem[]; onAddMore: (
       >
         + Tambah produk lain
       </button>
+    </div>
+  )
+}
+
+function StepUkuran({
+  ukuran, jumlah, onChange,
+}: {
+  ukuran: Record<string, number>
+  jumlah: string
+  onChange: (ukuran: Record<string, number>) => void
+}) {
+  const target = parseInt(jumlah) || 0
+  const total = SIZES.reduce((sum, s) => sum + (ukuran[s] || 0), 0)
+
+  return (
+    <div>
+      <h3 className="text-gray-900 font-bold text-lg mb-1">Rincian ukuran</h3>
+      <p className="text-gray-500 text-sm mb-4">
+        Masukkan jumlah per ukuran. Total harus {target} pcs.
+      </p>
+
+      <div className="space-y-2 mb-4">
+        {SIZES.map((size) => (
+          <div key={size} className="flex items-center gap-3">
+            <span className="w-10 text-sm font-semibold text-gray-700">{size}</span>
+            <input
+              type="number"
+              min="0"
+              value={ukuran[size] || ''}
+              onChange={(e) => {
+                const val = Math.max(0, parseInt(e.target.value) || 0)
+                onChange({ ...ukuran, [size]: val })
+              }}
+              placeholder="0"
+              className="w-24 px-3 py-2 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+            />
+            <span className="text-xs text-gray-400">pcs</span>
+          </div>
+        ))}
+      </div>
+
+      <div className={`flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium ${
+        total === 0 ? 'bg-gray-50 text-gray-400' :
+        total === target ? 'bg-green-50 text-green-700' : 'bg-amber-50 text-amber-700'
+      }`}>
+        <span>Total</span>
+        <span>{total} / {target} pcs</span>
+      </div>
+
+      <p className="text-xs text-gray-400 mt-3">Kosongkan semua jika belum tahu rincian ukuran.</p>
     </div>
   )
 }
@@ -442,12 +499,15 @@ function StepKontak({ nama, whatsapp, nama_organisasi, onChange }: {
 
 // ---- Main form ----
 
-const EMPTY_ITEM: OrderItem = { jenis_seragam: '', jumlah: '', bahan: '', metode_logo: '' }
+const SIZES = ['S', 'M', 'L', 'XL', 'XXL']
+
+const EMPTY_ITEM: OrderItem = { jenis_seragam: '', jumlah: '', ukuran: {}, bahan: '', metode_logo: '' }
 
 const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
   'organisasi': 'item-produk',
   'item-produk': 'item-jumlah',
-  'item-jumlah': 'item-bahan',
+  'item-jumlah': 'item-ukuran',
+  'item-ukuran': 'item-bahan',
   'item-bahan': 'item-logo',
   'item-review': 'anggaran',
   'anggaran': 'tenggat',
@@ -458,6 +518,7 @@ const PHASE_LABEL: Record<Phase, string> = {
   'organisasi': 'Organisasi',
   'item-produk': 'Produk',
   'item-jumlah': 'Jumlah',
+  'item-ukuran': 'Ukuran',
   'item-bahan': 'Bahan',
   'item-logo': 'Logo',
   'item-review': 'Ringkasan Produk',
@@ -469,7 +530,7 @@ const PHASE_LABEL: Record<Phase, string> = {
 // 4-segment progress: Organisasi | Produk | Detail | Kontak
 function getProgress(phase: Phase): number {
   if (phase === 'organisasi') return 1
-  if (['item-produk', 'item-jumlah', 'item-bahan', 'item-logo', 'item-review'].includes(phase)) return 2
+  if (['item-produk', 'item-jumlah', 'item-ukuran', 'item-bahan', 'item-logo', 'item-review'].includes(phase)) return 2
   if (['anggaran', 'tenggat'].includes(phase)) return 3
   return 4
 }
@@ -500,11 +561,21 @@ export default function OrderForm() {
     setFieldError(null)
   }
 
+  const setCUkuran = (ukuran: Record<string, number>) => {
+    setCurrent(prev => ({ ...prev, ukuran }))
+    setFieldError(null)
+  }
+
   const validate = (p: Phase): string | null => {
     if (p === 'item-produk' && !current.jenis_seragam) return 'Pilih jenis produk terlebih dahulu.'
     if (p === 'item-jumlah') {
       if (!current.jumlah) return 'Masukkan jumlah yang dibutuhkan.'
       if (parseInt(current.jumlah) < 1) return 'Jumlah harus lebih dari 0.'
+    }
+    if (p === 'item-ukuran') {
+      const target = parseInt(current.jumlah) || 0
+      const total = Object.values(current.ukuran).reduce((sum, n) => sum + n, 0)
+      if (total > 0 && total !== target) return `Total ukuran (${total}) harus sama dengan jumlah yang dipesan (${target} pcs).`
     }
     if (p === 'kontak') {
       if (global.nama.trim().length < 2) return 'Nama harus diisi.'
@@ -537,7 +608,8 @@ export default function OrderForm() {
         setPhase(items.length > 0 ? 'item-review' : 'organisasi')
         break
       case 'item-jumlah': setPhase('item-produk'); break
-      case 'item-bahan': setPhase('item-jumlah'); break
+      case 'item-ukuran': setPhase('item-jumlah'); break
+      case 'item-bahan': setPhase('item-ukuran'); break
       case 'item-logo': setPhase('item-bahan'); break
       case 'item-review': {
         // Restore the last item for editing
@@ -654,6 +726,13 @@ export default function OrderForm() {
             value={current.jumlah}
             onChange={(v) => setC('jumlah', v)}
             produk={current.jenis_seragam}
+          />
+        )}
+        {phase === 'item-ukuran' && (
+          <StepUkuran
+            ukuran={current.ukuran}
+            jumlah={current.jumlah}
+            onChange={setCUkuran}
           />
         )}
         {phase === 'item-bahan' && (
