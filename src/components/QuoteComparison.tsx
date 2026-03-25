@@ -20,6 +20,7 @@ type Label = {
 type Supplier = {
   name: string
   label: Label
+  lokasi: string
   hargaPerPcs: string
   total: string
   bahan: string
@@ -33,6 +34,7 @@ const suppliers: Supplier[] = [
   {
     name: 'Supplier A',
     label: { text: 'Termurah', color: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
+    lokasi: 'Bandung',
     hargaPerPcs: 'Rp 68.000',
     total: 'Rp 13.600.000',
     bahan: 'Cotton Combed 30s campuran',
@@ -44,6 +46,7 @@ const suppliers: Supplier[] = [
   {
     name: 'Supplier B',
     label: { text: 'Rekomendasi', color: 'text-brand-700', bg: 'bg-brand-50', border: 'border-brand-200' },
+    lokasi: 'Jakarta',
     hargaPerPcs: 'Rp 82.000',
     total: 'Rp 16.400.000',
     bahan: 'Cotton Combed 30s',
@@ -55,6 +58,7 @@ const suppliers: Supplier[] = [
   {
     name: 'Supplier C',
     label: { text: 'Kualitas Terbaik', color: 'text-purple-700', bg: 'bg-purple-50', border: 'border-purple-200' },
+    lokasi: 'Surabaya',
     hargaPerPcs: 'Rp 95.000',
     total: 'Rp 19.000.000',
     bahan: 'Lacoste Premium',
@@ -120,7 +124,16 @@ export default function QuoteComparison() {
                   {s.label.text}
                 </span>
 
-                <p className="font-bold text-gray-900 mb-0.5">{s.name}</p>
+                <div className="flex items-center justify-between mb-0.5">
+                  <p className="font-bold text-gray-900">{s.name}</p>
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {s.lokasi}
+                  </span>
+                </div>
                 <p className="text-2xl font-extrabold text-gray-900 mb-1">{s.hargaPerPcs}<span className="text-sm font-normal text-gray-500">/pcs</span></p>
                 <p className="text-xs text-gray-500 mb-4">Total: {s.total}</p>
 

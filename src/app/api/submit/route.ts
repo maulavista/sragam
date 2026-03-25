@@ -14,6 +14,7 @@ const orderItemSchema = z.object({
 const orderSchema = z.object({
   nama: z.string().min(2, 'Nama harus diisi'),
   whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi'),
+  kota: z.string().min(2, 'Kota harus diisi'),
   nama_organisasi: z.string().optional(),
   jenis_organisasi: z.string().optional(),
   items: z.string().min(1, 'Produk harus dipilih'),
@@ -29,6 +30,7 @@ export async function POST(request: NextRequest) {
     const raw = {
       nama: formData.get('nama') as string,
       whatsapp: formData.get('whatsapp') as string,
+      kota: formData.get('kota') as string,
       nama_organisasi: (formData.get('nama_organisasi') as string) || undefined,
       jenis_organisasi: (formData.get('jenis_organisasi') as string) || undefined,
       items: formData.get('items') as string,
@@ -87,6 +89,7 @@ export async function POST(request: NextRequest) {
       .insert({
         nama: parsed.data.nama,
         whatsapp: parsed.data.whatsapp,
+        kota: parsed.data.kota,
         nama_organisasi: parsed.data.nama_organisasi ?? null,
         jenis_organisasi: parsed.data.jenis_organisasi ?? null,
         anggaran: parsed.data.anggaran ?? null,

@@ -21,6 +21,7 @@ type GlobalData = {
   nama: string
   whatsapp: string
   nama_organisasi: string
+  kota: string
 }
 
 type Phase =
@@ -478,8 +479,8 @@ function StepTenggatReferensi({
   )
 }
 
-function StepKontak({ nama, whatsapp, nama_organisasi, onChange }: {
-  nama: string; whatsapp: string; nama_organisasi: string
+function StepKontak({ nama, whatsapp, nama_organisasi, kota, onChange }: {
+  nama: string; whatsapp: string; nama_organisasi: string; kota: string
   onChange: (field: keyof GlobalData, value: string) => void
 }) {
   return (
@@ -494,6 +495,10 @@ function StepKontak({ nama, whatsapp, nama_organisasi, onChange }: {
         <div>
           <label className="form-label">Nomor WhatsApp <span className="text-red-500">*</span></label>
           <input type="tel" value={whatsapp} onChange={(e) => onChange('whatsapp', e.target.value)} placeholder="08xxxxxxxxxx" inputMode="tel" className="form-input" />
+        </div>
+        <div>
+          <label className="form-label">Kota <span className="text-red-500">*</span></label>
+          <input type="text" value={kota} onChange={(e) => onChange('kota', e.target.value)} placeholder="Contoh: Surabaya" className="form-input" />
         </div>
         <div>
           <label className="form-label">Perusahaan / Organisasi</label>
@@ -550,7 +555,7 @@ export default function OrderForm() {
   const [items, setItems] = useState<OrderItem[]>([])
   const [current, setCurrent] = useState<OrderItem>({ ...EMPTY_ITEM })
   const [global, setGlobal] = useState<GlobalData>({
-    jenis_organisasi: '', anggaran: '', deadline: '', catatan: '', nama: '', whatsapp: '', nama_organisasi: '',
+    jenis_organisasi: '', anggaran: '', deadline: '', catatan: '', nama: '', whatsapp: '', nama_organisasi: '', kota: '',
   })
 
   const [fileName, setFileName] = useState<string | null>(null)
@@ -587,6 +592,7 @@ export default function OrderForm() {
     if (p === 'kontak') {
       if (global.nama.trim().length < 2) return 'Nama harus diisi.'
       if (global.whatsapp.trim().length < 9) return 'Nomor WhatsApp harus diisi.'
+      if (global.kota.trim().length < 2) return 'Kota harus diisi.'
     }
     return null
   }
@@ -655,6 +661,7 @@ export default function OrderForm() {
       formData.append('jenis_organisasi', global.jenis_organisasi)
       formData.append('nama', global.nama)
       formData.append('whatsapp', global.whatsapp)
+      formData.append('kota', global.kota)
       if (global.nama_organisasi) formData.append('nama_organisasi', global.nama_organisasi)
       if (global.anggaran) formData.append('anggaran', global.anggaran)
       if (global.deadline) formData.append('deadline', global.deadline)
@@ -783,6 +790,7 @@ export default function OrderForm() {
             nama={global.nama}
             whatsapp={global.whatsapp}
             nama_organisasi={global.nama_organisasi}
+            kota={global.kota}
             onChange={setG}
           />
         )}
