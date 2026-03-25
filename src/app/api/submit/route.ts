@@ -1,0 +1,204 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+import { createServiceClient, createSessionClient } from '@/lib/supabase-server'
+import { Resend } from 'resend'
+
+const orderItemSchema = z.object({
+  jenis_seragam: z.string().min(1),
+  jumlah: z.string().min(1),
+  bahan: z.string().optional(),
+  metode_logo: z.string().optional(),
+})
+
+const orderSchema = z.object({
+  nama: z.string().min(2, 'Nama harus diisi'),
+  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi'),
+  nama_organisasi: z.string().optional(),
+  jenis_organisasi: z.string().optional(),
+  items: z.string().min(1, 'Produk harus dipilih'),
+  anggaran: z.string().optional(),
+  deadline: z.string().optional(),
+  catatan: z.string().optional(),
+})
+
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData()
+
+    const raw = {
+      nama: formData.get('nama') as string,
+      whatsapp: formData.get('whatsapp') as string,
+      nama_organisasi: (formData.get('nama_organisasi') as string) || undefined,
+      jenis_organisasi: (formData.get('jenis_organisasi') as string) || undefined,
+      items: formData.get('items') as string,
+      anggaran: (formData.get('anggaran') as string) || undefined,
+      deadline: (formData.get('deadline') as string) || undefined,
+      catatan: (formData.get('catatan') as string) || undefined,
+    }
+
+    const parsed = orderSchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Data tidak valid', details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    // Parse and validate items array
+    let items: z.infer<typeof orderItemSchema>[]
+    try {
+      const rawItems = JSON.parse(parsed.data.items)
+      if (!Array.isArray(rawItems) || rawItems.length === 0) {
+        return NextResponse.json({ error: 'Minimal satu produk harus dipilih' }, { status: 400 })
+      }
+      const parsedItems = rawItems.map((item: unknown) => orderItemSchema.safeParse(item))
+      const invalid = parsedItems.find(r => !r.success)
+      if (invalid) {
+        return NextResponse.json({ error: 'Data produk tidak valid' }, { status: 400 })
+      }
+      items = parsedItems.map(r => (r as { success: true; data: z.infer<typeof orderItemSchema> }).data)
+    } catch {
+      return NextResponse.json({ error: 'Format produk tidak valid' }, { status: 400 })
+    }
+
+    const supabase = createServiceClient()
+
+    // Get user from session (optional — orders can be submitted without an account)
+    const sessionClient = createSessionClient()
+    const { data: { user } } = await sessionClient.auth.getUser()
+
+    // Handle optional file upload
+    let desain_path: string | null = null
+    const desainFile = formData.get('desain') as File | null
+
+    if (desainFile && desainFile.size > 0) {
+      const ext = desainFile.name.split('.').pop() ?? 'bin'
+      const path = `desain/${Date.now()}-${crypto.randomUUID()}.${ext}`
+      const { error: uploadError } = await supabase.storage
+        .from('order-designs')
+        .upload(path, desainFile, { contentType: desainFile.type })
+      if (!uploadError) desain_path = path
+    }
+
+    // Insert order
+    const { data: order, error: dbError } = await supabase
+      .from('orders')
+      .insert({
+        nama: parsed.data.nama,
+        whatsapp: parsed.data.whatsapp,
+        nama_organisasi: parsed.data.nama_organisasi ?? null,
+        jenis_organisasi: parsed.data.jenis_organisasi ?? null,
+        anggaran: parsed.data.anggaran ?? null,
+        desain_path,
+        deadline: parsed.data.deadline ?? null,
+        catatan: parsed.data.catatan ?? null,
+        status: 'baru',
+        user_id: user?.id ?? null,
+      })
+      .select('id')
+      .single()
+
+    if (dbError) {
+      console.error('DB insert error:', dbError)
+      return NextResponse.json({ error: 'Gagal menyimpan data' }, { status: 500 })
+    }
+
+    // Insert order items
+    const { error: itemsError } = await supabase
+      .from('order_items')
+      .insert(
+        items.map((item) => ({
+          order_id: order.id,
+          jenis_seragam: item.jenis_seragam,
+          jumlah: parseInt(item.jumlah, 10),
+          bahan: item.bahan ?? null,
+          metode_logo: item.metode_logo ?? null,
+        }))
+      )
+
+    if (itemsError) {
+      console.error('DB items insert error:', itemsError)
+      // Order was created — don't fail the request, items can be added manually
+    }
+
+    // Send email notifications
+    if (process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY)
+      const from = process.env.RESEND_FROM_EMAIL ?? 'noreply@sragam.com'
+      const adminEmail = process.env.RESEND_ADMIN_EMAIL
+
+      const itemsTable = items.map((item, i) => `
+        <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
+          <td style="padding:6px 12px;font-weight:600">${i + 1}</td>
+          <td style="padding:6px 12px">${item.jenis_seragam}</td>
+          <td style="padding:6px 12px">${item.jumlah} pcs</td>
+          <td style="padding:6px 12px">${item.bahan ?? 'Belum tahu'}</td>
+          <td style="padding:6px 12px">${item.metode_logo ?? 'Belum tahu'}</td>
+        </tr>
+      `).join('')
+
+      const orderSummary = `
+        <h3 style="color:#374151;margin-bottom:8px">Produk yang Dipesan</h3>
+        <table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px;margin-bottom:20px">
+          <thead>
+            <tr style="background:#e5e7eb">
+              <th style="padding:6px 12px;text-align:left">#</th>
+              <th style="padding:6px 12px;text-align:left">Produk</th>
+              <th style="padding:6px 12px;text-align:left">Jumlah</th>
+              <th style="padding:6px 12px;text-align:left">Bahan</th>
+              <th style="padding:6px 12px;text-align:left">Logo</th>
+            </tr>
+          </thead>
+          <tbody>${itemsTable}</tbody>
+        </table>
+
+        <h3 style="color:#374151;margin-bottom:8px">Detail Pesanan</h3>
+        <table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px">
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.nama}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.whatsapp}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Jenis Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.jenis_organisasi ?? '-'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.nama_organisasi ?? '-'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Anggaran</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.anggaran ?? 'Belum ada patokan'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Deadline</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.deadline ?? '-'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Catatan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.catatan ?? '-'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">File Desain</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${desain_path ? desain_path : 'Tidak ada'}</td></tr>
+        </table>
+      `
+
+      const promises = []
+
+      if (adminEmail) {
+        const itemsSummary = items.map(i => `${i.jenis_seragam} ${i.jumlah} pcs`).join(', ')
+        promises.push(
+          resend.emails.send({
+            from,
+            to: adminEmail,
+            subject: `[Sragam] Permintaan baru: ${itemsSummary} - ${parsed.data.nama}`,
+            html: `
+              <div style="font-family:sans-serif;max-width:640px;margin:0 auto">
+                <h2 style="color:#1e40af">Permintaan Seragam Baru</h2>
+                <p style="color:#6b7280">Order ID: <code>${order.id}</code></p>
+                ${orderSummary}
+                <p style="margin-top:24px;color:#374151">
+                  Hubungi pelanggan di WhatsApp: <a href="https://wa.me/${parsed.data.whatsapp}">${parsed.data.whatsapp}</a>
+                </p>
+              </div>
+            `,
+          })
+        )
+      }
+
+      await Promise.allSettled(promises)
+
+      await supabase
+        .from('orders')
+        .update({ email_sent: true })
+        .eq('id', order.id)
+    }
+
+    return NextResponse.json({ success: true, orderId: order.id })
+  } catch (err) {
+    console.error('Submit handler error:', err)
+    return NextResponse.json({ error: 'Terjadi kesalahan. Coba lagi.' }, { status: 500 })
+  }
+}
