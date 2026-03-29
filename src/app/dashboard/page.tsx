@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createSessionClient } from '@/lib/supabase-server'
 import Link from 'next/link'
+import SignOutButton from '@/components/SignOutButton'
 
 const STATUS_LABEL: Record<string, string> = {
   baru: 'Baru',
@@ -24,23 +25,33 @@ export default async function DashboardPage() {
 
   const { data: orders } = await supabase
     .from('orders')
-    .select('id, created_at, status, nama, nama_organisasi, jenis_organisasi, order_items(jenis_seragam, jumlah)')
+    .select('id, created_at, status, nama, nama_organisasi, jenis_organisasi, kota, anggaran, order_items(jenis_seragam, jumlah)')
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
+
+  const activeCount = orders?.filter(o => o.status !== 'selesai').length ?? 0
 
   return (
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="font-bold text-gray-900 text-lg tracking-tight">sragam</Link>
-          <span className="text-sm text-gray-400">{user.email}</span>
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-400 hidden sm:block">{user.email}</span>
+            <SignOutButton />
+          </div>
         </div>
       </nav>
 
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Pesanan Saya</h1>
-          <Link href="/" className="btn-primary text-sm py-2 px-4">
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Pesanan Saya</h1>
+            {activeCount > 0 && (
+              <p className="text-sm text-gray-400 mt-0.5">{activeCount} pesanan aktif</p>
+            )}
+          </div>
+          <Link href="/" className="btn-primary text-sm py-2 px-4 flex-shrink-0">
             + Pesanan Baru
           </Link>
         </div>
@@ -53,13 +64,18 @@ export default async function DashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {orders.map((order) => {
               const items = (order.order_items ?? []) as { jenis_seragam: string; jumlah: number }[]
               const statusKey = order.status ?? 'baru'
               const title = order.nama_organisasi || order.jenis_organisasi || order.nama
+              const totalPcs = items.reduce((sum, i) => sum + i.jumlah, 0)
               return (
-                <div key={order.id} className="bg-white rounded-xl border border-gray-200 p-5">
+                <Link
+                  key={order.id}
+                  href={`/dashboard/${order.id}`}
+                  className="block bg-white rounded-xl border border-gray-200 p-5 hover:border-gray-300 hover:shadow-sm transition-all"
+                >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div>
                       <p className="text-xs text-gray-400 mb-0.5">
@@ -68,13 +84,18 @@ export default async function DashboardPage() {
                         })}
                       </p>
                       <p className="font-semibold text-gray-900">{title}</p>
+                      {(order.kota || order.anggaran) && (
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          {[order.kota, order.anggaran].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
                     </div>
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border flex-shrink-0 ${STATUS_COLOR[statusKey] ?? STATUS_COLOR.baru}`}>
                       {STATUS_LABEL[statusKey] ?? statusKey}
                     </span>
                   </div>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {items.map((item, i) => (
                       <span
                         key={i}
@@ -83,8 +104,11 @@ export default async function DashboardPage() {
                         {item.jenis_seragam} · {item.jumlah} pcs
                       </span>
                     ))}
+                    {items.length > 1 && (
+                      <span className="text-xs text-gray-400">{totalPcs} pcs total</span>
+                    )}
                   </div>
-                </div>
+                </Link>
               )
             })}
           </div>
