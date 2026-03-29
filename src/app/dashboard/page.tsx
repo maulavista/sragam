@@ -3,6 +3,13 @@ import { createSessionClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
 
+function formatRupiah(value: string | null | undefined): string | null {
+  if (!value) return null
+  const num = parseInt(value.replace(/\D/g, ''), 10)
+  if (isNaN(num)) return value
+  return 'Rp ' + num.toLocaleString('id-ID')
+}
+
 const STATUS_LABEL: Record<string, string> = {
   baru: 'Baru',
   diproses: 'Diproses',
@@ -86,7 +93,7 @@ export default async function DashboardPage() {
                       <p className="font-semibold text-gray-900">{title}</p>
                       {(order.kota || order.anggaran) && (
                         <p className="text-xs text-gray-400 mt-0.5">
-                          {[order.kota, order.anggaran].filter(Boolean).join(' · ')}
+                          {[order.kota, formatRupiah(order.anggaran)].filter(Boolean).join(' · ')}
                         </p>
                       )}
                     </div>
