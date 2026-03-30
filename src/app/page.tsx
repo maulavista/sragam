@@ -1,7 +1,7 @@
 import Navbar from '@/components/Navbar'
 import HeroSection from '@/components/HeroSection'
 import ProblemSection from '@/components/ProblemSection'
-import SolutionSection from '@/components/SolutionSection'
+import HowItWorks from '@/components/HowItWorks'
 import ProductsSection from '@/components/ProductsSection'
 import OrderFormSection from '@/components/OrderFormSection'
 import FAQSection from '@/components/FAQSection'
@@ -14,7 +14,7 @@ export default function Home() {
       <Navbar />
       <HeroSection />
       <ProblemSection />
-      <SolutionSection />
+      <HowItWorks />
       <ProductsSection />
       <OrderFormSection />
       <FAQSection />
