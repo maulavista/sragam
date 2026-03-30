@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import type { ReactNode } from 'react'
-
-const WA_TEAM = process.env.NEXT_PUBLIC_WHATSAPP_TEAM
+import Link from 'next/link'
 
 const faqs: { q: string; a: ReactNode }[] = [
   {
@@ -31,15 +30,13 @@ const faqs: { q: string; a: ReactNode }[] = [
     a: (
       <>
         Kami selalu terbuka untuk bekerja sama dengan supplier baru.{' '}
-        <a
-          href={`https://wa.me/${WA_TEAM}?text=Halo%2C+saya+tertarik+bergabung+sebagai+supplier+di+Sragam.`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <Link
+          href="/supplier"
           className="text-brand-700 font-medium underline underline-offset-2 hover:text-brand-800"
         >
-          Hubungi kami via WhatsApp
-        </a>{' '}
-        dan ceritakan sedikit tentang bisnis Anda.
+          Isi form pendaftaran supplier
+        </Link>{' '}
+        dan ceritakan sedikit tentang bisnis dan pengalaman Anda.
       </>
     ),
   },

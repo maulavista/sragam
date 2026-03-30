@@ -1,4 +1,4 @@
-const WA_TEAM = process.env.NEXT_PUBLIC_WHATSAPP_TEAM
+import Link from 'next/link'
 
 export default function Footer() {
   return (
@@ -14,14 +14,12 @@ export default function Footer() {
             <span className="text-white font-bold">sragam</span>
           </div>
 
-          <a
-            href={`https://wa.me/${WA_TEAM}?text=Halo%2C+saya+tertarik+bergabung+sebagai+supplier+di+Sragam.`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/supplier"
             className="text-sm text-gray-400 hover:text-white transition-colors"
           >
-            Mau bergabung sebagai supplier? <span className="underline underline-offset-2">Hubungi kami</span>
-          </a>
+            Mau bergabung sebagai supplier? <span className="underline underline-offset-2">Daftar di sini</span>
+          </Link>
 
           <p className="text-xs">&copy; {new Date().getFullYear()} Sragam</p>
         </div>
