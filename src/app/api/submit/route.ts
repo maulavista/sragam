@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient, createSessionClient } from '@/lib/supabase-server'
-import { Resend } from 'resend'
+import { sendEmail } from '@/lib/email'
 
 const orderItemSchema = z.object({
   jenis_seragam: z.string().min(1),
@@ -127,10 +127,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notifications
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      const from = process.env.RESEND_FROM_EMAIL ?? 'noreply@sragam.com'
-      const adminEmail = process.env.RESEND_ADMIN_EMAIL
+    if (process.env.BREVO_API_KEY) {
+      const adminEmail = process.env.EMAIL_ADMIN
 
       const itemsTable = items.map((item, i) => `
         <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
@@ -175,8 +173,7 @@ export async function POST(request: NextRequest) {
       if (adminEmail) {
         const itemsSummary = items.map(i => `${i.jenis_seragam} ${i.jumlah} pcs`).join(', ')
         promises.push(
-          resend.emails.send({
-            from,
+          sendEmail({
             to: adminEmail,
             subject: `[Sragam] Permintaan baru: ${itemsSummary} - ${parsed.data.nama}`,
             html: `

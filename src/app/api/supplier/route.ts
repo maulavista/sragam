@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase-server'
-import { Resend } from 'resend'
+import { sendEmail } from '@/lib/email'
 
 const supplierSchema = z.object({
   nama_bisnis: z.string().min(2, 'Nama bisnis harus diisi'),
@@ -50,35 +50,29 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Gagal menyimpan data' }, { status: 500 })
     }
 
-    if (process.env.RESEND_API_KEY) {
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      const from = process.env.RESEND_FROM_EMAIL ?? 'noreply@sragam.com'
-      const adminEmail = process.env.RESEND_ADMIN_EMAIL
-
-      if (adminEmail) {
-        await resend.emails.send({
-          from,
-          to: adminEmail,
-          subject: `[Sragam] Pendaftaran supplier baru: ${d.nama_bisnis} (${d.kota})`,
-          html: `
-            <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-              <h2 style="color:#1e40af">Pendaftaran Supplier Baru</h2>
-              <table style="border-collapse:collapse;width:100%;font-size:14px">
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Bisnis</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_bisnis}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">PIC</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_pic}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb"><a href="https://wa.me/${d.whatsapp}">${d.whatsapp}</a></td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kota</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kota}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Produk</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.produk}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kapasitas/bulan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kapasitas ?? '-'}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">MOQ</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.moq ?? '-'}</td></tr>
-                <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Waktu produksi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.waktu_produksi ?? '-'}</td></tr>
-              </table>
-              <h3 style="color:#374151;margin-top:20px">Pengalaman & Klien Sebelumnya</h3>
-              <p style="color:#4b5563;font-size:14px;line-height:1.6;white-space:pre-wrap">${d.pengalaman}</p>
-            </div>
-          `,
-        })
-      }
+    const adminEmail = process.env.EMAIL_ADMIN
+    if (adminEmail) {
+      await sendEmail({
+        to: adminEmail,
+        subject: `[Sragam] Pendaftaran supplier baru: ${d.nama_bisnis} (${d.kota})`,
+        html: `
+          <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+            <h2 style="color:#1e40af">Pendaftaran Supplier Baru</h2>
+            <table style="border-collapse:collapse;width:100%;font-size:14px">
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Bisnis</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_bisnis}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">PIC</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_pic}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb"><a href="https://wa.me/${d.whatsapp}">${d.whatsapp}</a></td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kota</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kota}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Produk</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.produk}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kapasitas/bulan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kapasitas ?? '-'}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">MOQ</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.moq ?? '-'}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Waktu produksi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.waktu_produksi ?? '-'}</td></tr>
+            </table>
+            <h3 style="color:#374151;margin-top:20px">Pengalaman & Klien Sebelumnya</h3>
+            <p style="color:#4b5563;font-size:14px;line-height:1.6;white-space:pre-wrap">${d.pengalaman}</p>
+          </div>
+        `,
+      })
     }
 
     return NextResponse.json({ success: true })
