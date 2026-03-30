@@ -15,11 +15,11 @@ export default function HeroSection() {
         </div>
 
         <h1 className="text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight mb-5">
-          Pesan Seragam<br />Tanpa Salah Paham
+          Pesan seragam tanpa<br />bolak-balik chat supplier
         </h1>
 
         <p className="text-lg text-blue-100 leading-relaxed max-w-xl mx-auto mb-8">
-          Ceritakan kebutuhan sekali. Kami kirim ke beberapa supplier dan susunkan penawarannya agar langsung bisa dibandingkan.
+          Isi form sekali. Kami kirim ke beberapa supplier sekaligus. Anda terima penawaran yang sudah siap dibandingkan.
         </p>
 
         <button
@@ -27,7 +27,7 @@ export default function HeroSection() {
           className="bg-amber-400 hover:bg-amber-300 text-brand-900 font-extrabold py-5 px-14 rounded-xl
                      transition-colors text-lg shadow-xl shadow-black/20"
         >
-          Minta Penawaran Sekarang
+          Minta Penawaran Gratis
         </button>
 
       </div>

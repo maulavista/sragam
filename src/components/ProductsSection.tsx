@@ -62,10 +62,10 @@ export default function ProductsSection() {
             Produk
           </p>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Apa Saja yang Bisa Kami Bantu?
+            Apa saja yang bisa dibantu?
           </h2>
           <p className="text-gray-500 max-w-lg mx-auto">
-            Dari kaos sederhana hingga seragam industri. Satu permintaan, beberapa penawaran yang siap dibandingkan.
+            Dari kaos tim hingga seragam industri. Satu form, beberapa penawaran.
           </p>
         </div>
 
@@ -93,7 +93,7 @@ export default function ProductsSection() {
         </div>
 
         <p className="text-center text-sm text-gray-400 mt-8">
-          Tidak ada di daftar? Pilih &ldquo;Lainnya&rdquo; di form dan jelaskan di catatan.
+          Tidak ada di daftar? Pilih &ldquo;Lainnya&rdquo; dan jelaskan di form.
         </p>
       </div>
     </section>

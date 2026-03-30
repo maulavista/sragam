@@ -14,7 +14,7 @@ export default function OrderFormSection() {
               Ceritakan Kebutuhan Anda
             </h2>
             <p className="text-gray-500">
-              Isi semaksimal yang sudah Anda tahu. Tidak perlu lengkap dulu.
+              Isi seadanya yang sudah Anda tahu. Tidak perlu lengkap.
             </p>
           </div>
 

@@ -40,7 +40,7 @@ const suppliers: Supplier[] = [
     bahan: 'Cotton Combed 30s campuran',
     logo: 'Sablon plastisol',
     waktu: '8 hari kerja',
-    catatan: 'Lebih murah, tapi bahan campuran. Warna bisa sedikit berbeda dari ekspektasi.',
+    catatan: 'Lebih murah, tapi bahan campuran.',
     highlight: false,
   },
   {
@@ -52,7 +52,7 @@ const suppliers: Supplier[] = [
     bahan: 'Cotton Combed 30s',
     logo: 'Sablon plastisol',
     waktu: '10 hari kerja',
-    catatan: 'Sesuai spesifikasi permintaan. Harga dan waktu produksi seimbang.',
+    catatan: 'Sesuai spesifikasi, harga seimbang.',
     highlight: true,
   },
   {
@@ -64,7 +64,7 @@ const suppliers: Supplier[] = [
     bahan: 'Lacoste Premium',
     logo: 'Bordir',
     waktu: '12 hari kerja',
-    catatan: 'Bordir lebih tahan lama dibanding sablon, cocok untuk seragam yang dipakai rutin.',
+    catatan: 'Kualitas premium, waktu lebih lama.',
     highlight: false,
   },
 ]
@@ -80,10 +80,10 @@ export default function QuoteComparison() {
             Contoh Tampilan
           </p>
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Contoh Penawaran yang Akan Anda Terima
+            Contoh penawaran yang Anda terima
           </h2>
           <p className="text-gray-500 max-w-lg mx-auto">
-            Perbedaan harga, bahan, dan waktu produksi sudah tercantum. Anda tinggal pilih.
+            Format seragam. Tinggal bandingkan dan pilih.
           </p>
         </div>
 

@@ -6,8 +6,8 @@ const problems = [
           d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
       </svg>
     ),
-    title: 'Harus jelasin hal yang sama berulang kali',
-    desc: 'Setiap kali hubungi supplier baru, Anda mulai dari awal lagi. Jenis, jumlah, bahan, desain, semua diketik ulang di WhatsApp satu per satu.',
+    title: 'Jelaskan hal yang sama berulang kali',
+    desc: 'Setiap supplier baru, mulai dari awal. Jenis, jumlah, bahan, desain, semua diulang via WhatsApp.',
   },
   {
     icon: (
@@ -16,8 +16,8 @@ const problems = [
           d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: 'Bolak-balik chat yang tidak jelas ujungnya',
-    desc: '"Bahan apa ya kak?" "Logonya mau sablon atau bordir?" "Ukurannya gimana?" Pertanyaan yang sama datang dari supplier yang berbeda.',
+    title: 'Chat bolak-balik tanpa ujung',
+    desc: '"Bahan apa?" "Logo sablon atau bordir?" Pertanyaan sama dari setiap supplier yang Anda hubungi.',
   },
   {
     icon: (
@@ -26,8 +26,8 @@ const problems = [
           d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
       </svg>
     ),
-    title: 'Penawaran yang susah dibandingkan',
-    desc: 'Satu supplier kasih harga per lusin, yang lain per pcs. Satu sudah termasuk ongkir, yang lain belum. Akhirnya Anda tidak tahu mana yang benar-benar lebih baik.',
+    title: 'Penawaran susah dibandingkan',
+    desc: 'Satu kasih harga per kodi, satu per pcs. Satu sudah ongkir, satu belum. Bingung mana yang lebih murah.',
   },
   {
     icon: (
@@ -36,8 +36,8 @@ const problems = [
           d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    title: 'Salah produksi karena informasi tidak lengkap',
-    desc: 'Warna sedikit berbeda. Sablon tidak sesuai posisi. Ukuran tidak sesuai ekspektasi. Padahal sudah dibicarakan, tapi ada yang terlewat di tengah jalan.',
+    title: 'Salah produksi karena miskomunikasi',
+    desc: 'Warna beda, posisi logo geser, ukuran tidak pas. Sudah diproduksi, tidak bisa diulang.',
   },
 ]
 
@@ -47,11 +47,10 @@ export default function ProblemSection() {
       <div className="section-container">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-3">
-            Pesan Seragam Itu Harusnya Tidak Serumit Ini
+            Pesan seragam harusnya tidak serumit ini
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
-            Kalau Anda pernah pesan seragam untuk kantor, acara, atau sekolah,
-            kemungkinan besar Anda pernah mengalami salah satu dari ini.
+            Kalau pernah pesan seragam untuk kantor atau acara, Anda pasti kenal masalah ini.
           </p>
         </div>
 
