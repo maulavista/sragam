@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import type { ReactNode } from 'react'
 
-const faqs = [
+const WA_TEAM = process.env.NEXT_PUBLIC_WHATSAPP_TEAM
+
+const faqs: { q: string; a: ReactNode }[] = [
   {
     q: 'Apakah layanan ini gratis?',
     a: 'Ya, gratis sepenuhnya. Kami tidak memungut biaya apa pun untuk mendapatkan penawaran.',
@@ -23,9 +26,26 @@ const faqs = [
     q: 'Berapa lama sampai saya terima penawaran?',
     a: 'Tergantung respons supplier dan kelengkapan informasi Anda. Yang pasti, penawaran yang Anda terima sudah lengkap dan siap dibandingkan.',
   },
+  {
+    q: 'Saya supplier seragam — bagaimana cara bergabung?',
+    a: (
+      <>
+        Kami selalu terbuka untuk bekerja sama dengan supplier baru.{' '}
+        <a
+          href={`https://wa.me/${WA_TEAM}?text=Halo%2C+saya+tertarik+bergabung+sebagai+supplier+di+Sragam.`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-brand-700 font-medium underline underline-offset-2 hover:text-brand-800"
+        >
+          Hubungi kami via WhatsApp
+        </a>{' '}
+        dan ceritakan sedikit tentang bisnis Anda.
+      </>
+    ),
+  },
 ]
 
-function FAQItem({ q, a }: { q: string; a: string }) {
+function FAQItem({ q, a }: { q: string; a: ReactNode }) {
   const [open, setOpen] = useState(false)
 
   return (
