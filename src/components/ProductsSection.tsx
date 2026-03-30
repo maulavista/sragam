@@ -92,7 +92,7 @@ export default function ProductsSection() {
           ))}
         </div>
 
-        <p className="text-center text-sm text-gray-400 mt-8">
+        <p className="text-center text-sm text-gray-500 mt-8">
           Tidak ada di daftar? Pilih &ldquo;Lainnya&rdquo; dan jelaskan di form.
         </p>
       </div>

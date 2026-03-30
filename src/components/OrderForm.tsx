@@ -807,16 +807,16 @@ export default function OrderForm() {
       {/* Navigation */}
       <div className="flex items-center gap-2 mt-4">
         {phase !== 'organisasi' && (
-          <button type="button" onClick={back} className="px-4 py-2.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <button type="button" onClick={back} className="px-4 py-3 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
             Kembali
           </button>
         )}
         {phase !== 'kontak' ? (
-          <button type="button" onClick={advance} className="flex-1 btn-primary py-2.5 text-sm">
+          <button type="button" onClick={advance} className="flex-1 btn-primary py-3 text-sm">
             Lanjut
           </button>
         ) : (
-          <button type="button" onClick={onSubmit} disabled={isSubmitting} className="flex-1 btn-primary py-2.5 text-sm">
+          <button type="button" onClick={onSubmit} disabled={isSubmitting} className="flex-1 btn-primary py-3 text-sm">
             {isSubmitting ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">

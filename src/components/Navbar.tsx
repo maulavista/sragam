@@ -52,7 +52,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={signOut}
-                  className="text-sm text-gray-400 hover:text-gray-600"
+                  className="text-sm text-gray-400 hover:text-gray-600 py-2 px-2"
                 >
                   Keluar
                 </button>
@@ -61,7 +61,7 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => router.push('?auth=login')}
-                  className="text-sm text-gray-600 hover:text-brand-700 font-medium"
+                  className="text-sm text-gray-600 hover:text-brand-700 font-medium py-2 px-2"
                 >
                   Masuk
                 </button>
