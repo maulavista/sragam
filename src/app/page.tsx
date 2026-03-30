@@ -3,7 +3,6 @@ import HeroSection from '@/components/HeroSection'
 import ProblemSection from '@/components/ProblemSection'
 import SolutionSection from '@/components/SolutionSection'
 import ProductsSection from '@/components/ProductsSection'
-import QuoteComparison from '@/components/QuoteComparison'
 import OrderFormSection from '@/components/OrderFormSection'
 import FAQSection from '@/components/FAQSection'
 import Footer from '@/components/Footer'
@@ -17,7 +16,6 @@ export default function Home() {
       <ProblemSection />
       <SolutionSection />
       <ProductsSection />
-      <QuoteComparison />
       <OrderFormSection />
       <FAQSection />
       <Footer />
