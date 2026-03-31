@@ -1,5 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createSessionClient } from '@/lib/supabase-server'
+
+export const metadata: Metadata = {
+  title: 'Pesanan Diterima',
+  robots: { index: false, follow: false },
+}
 
 export default async function SuccessPage() {
   const supabase = createSessionClient()

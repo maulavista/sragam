@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { createSessionClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+
+export const metadata: Metadata = {
+  title: 'Pesanan Saya',
+  robots: { index: false, follow: false },
+}
 
 function formatRupiah(value: string | null | undefined): string | null {
   if (!value) return null

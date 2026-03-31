@@ -2,6 +2,28 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone()
+
+  // --- Canonical URL enforcement ---
+  // 1. Redirect www → non-www
+  if (url.hostname.startsWith('www.')) {
+    url.hostname = url.hostname.slice(4)
+    return NextResponse.redirect(url, { status: 301 })
+  }
+
+  // 2. Force lowercase path
+  if (url.pathname !== url.pathname.toLowerCase()) {
+    url.pathname = url.pathname.toLowerCase()
+    return NextResponse.redirect(url, { status: 301 })
+  }
+
+  // 3. Remove trailing slash (except root)
+  if (url.pathname !== '/' && url.pathname.endsWith('/')) {
+    url.pathname = url.pathname.slice(0, -1)
+    return NextResponse.redirect(url, { status: 301 })
+  }
+
+  // --- Auth guard ---
   let response = NextResponse.next({
     request: { headers: request.headers },
   })
@@ -28,15 +50,18 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/'
-    url.searchParams.set('auth', 'login')
-    return NextResponse.redirect(url)
+    const loginUrl = request.nextUrl.clone()
+    loginUrl.pathname = '/'
+    loginUrl.searchParams.set('auth', 'login')
+    return NextResponse.redirect(loginUrl)
   }
 
   return response
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: [
+    // Apply canonical redirects to all non-static paths
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|xml|txt)$).*)',
+  ],
 }

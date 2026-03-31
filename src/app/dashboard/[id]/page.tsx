@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import { redirect, notFound } from 'next/navigation'
 import { createSessionClient } from '@/lib/supabase-server'
 import Link from 'next/link'
 import SignOutButton from '@/components/SignOutButton'
+
+export const metadata: Metadata = {
+  title: 'Detail Pesanan',
+  robots: { index: false, follow: false },
+}
 
 const STEPS = ['baru', 'diproses', 'penawaran_dikirim', 'selesai'] as const
 const STEP_LABELS = ['Diterima', 'Diproses', 'Penawaran Dikirim', 'Selesai']
