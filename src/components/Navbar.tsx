@@ -65,7 +65,7 @@ export default function Navbar() {
                 >
                   Masuk
                 </button>
-                <button onClick={scrollToForm} className="btn-primary text-sm py-2 px-4">
+                <button id="navbar-cta" onClick={scrollToForm} className="btn-primary text-sm py-2 px-4">
                   Pesan Seragam
                 </button>
               </>
