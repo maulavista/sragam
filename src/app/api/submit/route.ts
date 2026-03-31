@@ -161,7 +161,7 @@ export async function POST(request: NextRequest) {
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.whatsapp}</td></tr>
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Jenis Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.jenis_organisasi ?? '-'}</td></tr>
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.nama_organisasi ?? '-'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Anggaran</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.anggaran ?? 'Belum ada patokan'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Anggaran</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.anggaran ? 'Rp ' + parseInt(parsed.data.anggaran).toLocaleString('id-ID') : 'Belum ada patokan'}</td></tr>
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Deadline</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.deadline ?? '-'}</td></tr>
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Catatan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.catatan ?? '-'}</td></tr>
           <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">File Desain</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${desain_path ? desain_path : 'Tidak ada'}</td></tr>
