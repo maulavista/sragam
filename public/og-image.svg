@@ -9,19 +9,13 @@
   <!-- Background -->
   <rect width="1200" height="630" fill="url(#bg)"/>
 
-  <!-- Subtle grid pattern -->
-  <rect width="1200" height="630" fill="none" stroke="white" stroke-opacity="0.04" stroke-width="1">
-    <animate attributeName="opacity" values="1" dur="0s"/>
-  </rect>
-  <line x1="0" y1="210" x2="1200" y2="210" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
-  <line x1="0" y1="420" x2="1200" y2="420" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
-  <line x1="400" y1="0" x2="400" y2="630" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
-  <line x1="800" y1="0" x2="800" y2="630" stroke="white" stroke-opacity="0.05" stroke-width="1"/>
-
-  <!-- Logo icon -->
+  <!-- Logo icon: 96x96 rounded square, t-shirt centered inside -->
   <g transform="translate(80, 80)">
     <rect width="96" height="96" rx="20" fill="white" fill-opacity="0.15"/>
-    <g transform="translate(12, 12) scale(3)">
+    <!-- path spans x=2..22 (w=20), y=2..20 (h=18) in 24-unit space -->
+    <!-- scaled ×3: 60×54px. center in 96×96: x_offset=(96-60)/2=18, y_offset=(96-54)/2=21 -->
+    <!-- translate = offset - min*scale = x:18-6=12, y:21-6=15 -->
+    <g transform="translate(12, 15) scale(3)">
       <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 20 L5 20 L5 10 L2 7 Z" fill="white"/>
     </g>
   </g>
@@ -35,16 +29,7 @@
   <!-- Divider -->
   <line x1="80" y1="390" x2="400" y2="390" stroke="white" stroke-opacity="0.25" stroke-width="1.5"/>
 
-  <!-- Features -->
+  <!-- Subtext -->
   <text x="80" y="440" font-family="system-ui, -apple-system, sans-serif" fill="white" fill-opacity="0.6" font-size="26">Ceritakan kebutuhan sekali.</text>
   <text x="80" y="480" font-family="system-ui, -apple-system, sans-serif" fill="white" fill-opacity="0.6" font-size="26">Terima penawaran dari beberapa supplier.</text>
-
-  <!-- Right accent -->
-  <circle cx="1050" cy="315" r="280" fill="white" fill-opacity="0.03"/>
-  <circle cx="1050" cy="315" r="180" fill="white" fill-opacity="0.03"/>
-
-  <!-- Floating t-shirt icon (large, right side) -->
-  <g transform="translate(870, 130) scale(8)" opacity="0.12">
-    <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 20 L5 20 L5 10 L2 7 Z" fill="white"/>
-  </g>
 </svg>
