@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase-server'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, escapeHtml } from '@/lib/email'
 
 const supplierSchema = z.object({
-  nama_bisnis: z.string().min(2, 'Nama bisnis harus diisi'),
-  nama_pic: z.string().min(2, 'Nama PIC harus diisi'),
-  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi'),
-  kota: z.string().min(2, 'Kota harus diisi'),
-  produk: z.string().min(1, 'Pilih minimal satu produk'),
-  kapasitas: z.string().optional(),
-  moq: z.string().optional(),
-  waktu_produksi: z.string().optional(),
-  pengalaman: z.string().min(10, 'Ceritakan sedikit pengalaman Anda'),
+  nama_bisnis: z.string().min(2, 'Nama bisnis harus diisi').max(150),
+  nama_pic: z.string().min(2, 'Nama PIC harus diisi').max(100),
+  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi').max(20),
+  kota: z.string().min(2, 'Kota harus diisi').max(100),
+  produk: z.string().min(1, 'Pilih minimal satu produk').max(500),
+  kapasitas: z.string().max(100).optional(),
+  moq: z.string().max(100).optional(),
+  waktu_produksi: z.string().max(100).optional(),
+  pengalaman: z.string().min(10, 'Ceritakan sedikit pengalaman Anda').max(3000),
 })
 
 export async function POST(request: NextRequest) {
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
 
     const adminEmail = process.env.EMAIL_ADMIN
     if (adminEmail) {
+      const esc = escapeHtml
       await sendEmail({
         to: adminEmail,
         subject: `[Sragam] Pendaftaran supplier baru: ${d.nama_bisnis} (${d.kota})`,
@@ -59,17 +60,17 @@ export async function POST(request: NextRequest) {
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
             <h2 style="color:#1e40af">Pendaftaran Supplier Baru</h2>
             <table style="border-collapse:collapse;width:100%;font-size:14px">
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Bisnis</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_bisnis}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">PIC</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.nama_pic}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb"><a href="https://wa.me/${d.whatsapp}">${d.whatsapp}</a></td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kota</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kota}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Produk</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.produk}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kapasitas/bulan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.kapasitas ?? '-'}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">MOQ</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.moq ?? '-'}</td></tr>
-              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Waktu produksi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.waktu_produksi ?? '-'}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Bisnis</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.nama_bisnis)}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">PIC</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.nama_pic)}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb"><a href="https://wa.me/${esc(d.whatsapp)}">${esc(d.whatsapp)}</a></td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kota</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.kota)}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Produk</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.produk)}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Kapasitas/bulan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.kapasitas ?? '-')}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">MOQ</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.moq ?? '-')}</td></tr>
+              <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Waktu produksi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.waktu_produksi ?? '-')}</td></tr>
             </table>
             <h3 style="color:#374151;margin-top:20px">Pengalaman & Klien Sebelumnya</h3>
-            <p style="color:#4b5563;font-size:14px;line-height:1.6;white-space:pre-wrap">${d.pengalaman}</p>
+            <p style="color:#4b5563;font-size:14px;line-height:1.6;white-space:pre-wrap">${esc(d.pengalaman)}</p>
           </div>
         `,
       })

@@ -1,26 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createServiceClient, createSessionClient } from '@/lib/supabase-server'
-import { sendEmail } from '@/lib/email'
+import { sendEmail, escapeHtml } from '@/lib/email'
 
 const orderItemSchema = z.object({
-  jenis_seragam: z.string().min(1),
-  jumlah: z.string().min(1),
-  ukuran: z.record(z.number()).optional(),
-  bahan: z.string().optional(),
-  metode_logo: z.string().optional(),
+  jenis_seragam: z.string().min(1).max(100),
+  jumlah: z.string().min(1).max(10),
+  ukuran: z.record(z.number().min(0).max(99999)).optional(),
+  bahan: z.string().max(100).optional(),
+  metode_logo: z.string().max(100).optional(),
 })
 
 const orderSchema = z.object({
-  nama: z.string().min(2, 'Nama harus diisi'),
-  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi'),
-  kota: z.string().min(2, 'Kota harus diisi'),
-  nama_organisasi: z.string().optional(),
-  jenis_organisasi: z.string().optional(),
+  nama: z.string().min(2, 'Nama harus diisi').max(100),
+  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi').max(20),
+  kota: z.string().min(2, 'Kota harus diisi').max(100),
+  nama_organisasi: z.string().max(150).optional(),
+  jenis_organisasi: z.string().max(100).optional(),
   items: z.string().min(1, 'Produk harus dipilih'),
-  anggaran: z.string().optional(),
-  deadline: z.string().optional(),
-  catatan: z.string().optional(),
+  anggaran: z.string().max(20).optional(),
+  deadline: z.string().max(20).optional(),
+  catatan: z.string().max(2000).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
       if (!Array.isArray(rawItems) || rawItems.length === 0) {
         return NextResponse.json({ error: 'Minimal satu produk harus dipilih' }, { status: 400 })
       }
+      if (rawItems.length > 20) {
+        return NextResponse.json({ error: 'Maksimal 20 produk per pesanan' }, { status: 400 })
+      }
       const parsedItems = rawItems.map((item: unknown) => orderItemSchema.safeParse(item))
       const invalid = parsedItems.find(r => !r.success)
       if (invalid) {
@@ -74,13 +77,22 @@ export async function POST(request: NextRequest) {
     let desain_path: string | null = null
     const desainFile = formData.get('desain') as File | null
 
+    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf']
+    const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
+
     if (desainFile && desainFile.size > 0) {
-      const ext = desainFile.name.split('.').pop() ?? 'bin'
-      const path = `desain/${Date.now()}-${crypto.randomUUID()}.${ext}`
+      if (desainFile.size > MAX_FILE_SIZE) {
+        return NextResponse.json({ error: 'File terlalu besar. Maksimal 5 MB.' }, { status: 400 })
+      }
+      const ext = (desainFile.name.split('.').pop() ?? '').toLowerCase()
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        return NextResponse.json({ error: 'Format file tidak didukung. Gunakan JPG, PNG, atau PDF.' }, { status: 400 })
+      }
+      const safePath = `desain/${Date.now()}-${crypto.randomUUID()}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('order-designs')
-        .upload(path, desainFile, { contentType: desainFile.type })
-      if (!uploadError) desain_path = path
+        .upload(safePath, desainFile, { contentType: desainFile.type })
+      if (!uploadError) desain_path = safePath
     }
 
     // Insert order
@@ -130,13 +142,16 @@ export async function POST(request: NextRequest) {
     if (process.env.BREVO_API_KEY) {
       const adminEmail = process.env.EMAIL_ADMIN
 
+      const d = parsed.data
+      const esc = escapeHtml
+
       const itemsTable = items.map((item, i) => `
         <tr style="background:${i % 2 === 0 ? '#f9fafb' : '#fff'}">
           <td style="padding:6px 12px;font-weight:600">${i + 1}</td>
-          <td style="padding:6px 12px">${item.jenis_seragam}</td>
-          <td style="padding:6px 12px">${item.jumlah} pcs</td>
-          <td style="padding:6px 12px">${item.bahan ?? 'Belum tahu'}</td>
-          <td style="padding:6px 12px">${item.metode_logo ?? 'Belum tahu'}</td>
+          <td style="padding:6px 12px">${esc(item.jenis_seragam)}</td>
+          <td style="padding:6px 12px">${esc(item.jumlah)} pcs</td>
+          <td style="padding:6px 12px">${esc(item.bahan ?? 'Belum tahu')}</td>
+          <td style="padding:6px 12px">${esc(item.metode_logo ?? 'Belum tahu')}</td>
         </tr>
       `).join('')
 
@@ -157,14 +172,14 @@ export async function POST(request: NextRequest) {
 
         <h3 style="color:#374151;margin-bottom:8px">Detail Pesanan</h3>
         <table style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px">
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.nama}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.whatsapp}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Jenis Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.jenis_organisasi ?? '-'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.nama_organisasi ?? '-'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Anggaran</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.anggaran ? 'Rp ' + parseInt(parsed.data.anggaran).toLocaleString('id-ID') : 'Belum ada patokan'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Deadline</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.deadline ?? '-'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Catatan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${parsed.data.catatan ?? '-'}</td></tr>
-          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">File Desain</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${desain_path ? desain_path : 'Tidak ada'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.nama)}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">WhatsApp</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.whatsapp)}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Jenis Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.jenis_organisasi ?? '-')}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Nama Organisasi</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.nama_organisasi ?? '-')}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Anggaran</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${d.anggaran ? 'Rp ' + parseInt(d.anggaran).toLocaleString('id-ID') : 'Belum ada patokan'}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Deadline</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.deadline ?? '-')}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">Catatan</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${esc(d.catatan ?? '-')}</td></tr>
+          <tr><td style="padding:6px 12px;background:#f3f4f6;font-weight:600">File Desain</td><td style="padding:6px 12px;border-bottom:1px solid #e5e7eb">${desain_path ? esc(desain_path) : 'Tidak ada'}</td></tr>
         </table>
       `
 
@@ -175,14 +190,14 @@ export async function POST(request: NextRequest) {
         promises.push(
           sendEmail({
             to: adminEmail,
-            subject: `[Sragam] Permintaan baru: ${itemsSummary} - ${parsed.data.nama}`,
+            subject: `[Sragam] Permintaan baru: ${itemsSummary} - ${d.nama}`,
             html: `
               <div style="font-family:sans-serif;max-width:640px;margin:0 auto">
                 <h2 style="color:#1e40af">Permintaan Seragam Baru</h2>
-                <p style="color:#6b7280">Order ID: <code>${order.id}</code></p>
+                <p style="color:#6b7280">Order ID: <code>${esc(order.id)}</code></p>
                 ${orderSummary}
                 <p style="margin-top:24px;color:#374151">
-                  Hubungi pelanggan di WhatsApp: <a href="https://wa.me/${parsed.data.whatsapp}">${parsed.data.whatsapp}</a>
+                  Hubungi pelanggan di WhatsApp: <a href="https://wa.me/${esc(d.whatsapp)}">${esc(d.whatsapp)}</a>
                 </p>
               </div>
             `,
