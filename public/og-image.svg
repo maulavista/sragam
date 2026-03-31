@@ -22,7 +22,7 @@
   <g transform="translate(80, 80)">
     <rect width="96" height="96" rx="20" fill="white" fill-opacity="0.15"/>
     <g transform="translate(12, 12) scale(3)">
-      <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 22 L5 22 L5 10 L2 7 Z" fill="white"/>
+      <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 20 L5 20 L5 10 L2 7 Z" fill="white"/>
     </g>
   </g>
 
@@ -45,6 +45,6 @@
 
   <!-- Floating t-shirt icon (large, right side) -->
   <g transform="translate(870, 130) scale(8)" opacity="0.12">
-    <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 22 L5 22 L5 10 L2 7 Z" fill="white"/>
+    <path d="M7 2 Q12 7 17 2 L22 7 L19 10 L19 20 L5 20 L5 10 L2 7 Z" fill="white"/>
   </g>
 </svg>
