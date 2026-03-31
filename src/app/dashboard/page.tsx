@@ -48,7 +48,7 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="font-bold text-gray-900 text-lg tracking-tight">sragam</Link>
+          <Link href="/"><img src="/logo.svg" alt="Sragam" width={120} height={32} className="h-8 w-auto" /></Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-400 hidden sm:block">{user.email}</span>
             <SignOutButton />
