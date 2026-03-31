@@ -3,11 +3,16 @@ import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase-server'
 import { sendEmail, escapeHtml } from '@/lib/email'
 
+// CWE-93: strip newlines from values used in email subjects
+const safeForSubject = (s: string) => s.replace(/[\r\n]/g, ' ')
+
 const supplierSchema = z.object({
-  nama_bisnis: z.string().min(2, 'Nama bisnis harus diisi').max(150),
-  nama_pic: z.string().min(2, 'Nama PIC harus diisi').max(100),
-  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi').max(20),
-  kota: z.string().min(2, 'Kota harus diisi').max(100),
+  // CWE-93: disallow newlines in subject-bound fields
+  nama_bisnis: z.string().min(2, 'Nama bisnis harus diisi').max(150).regex(/^[^\r\n]*$/, 'Nama bisnis tidak valid'),
+  nama_pic: z.string().min(2, 'Nama PIC harus diisi').max(100).regex(/^[^\r\n]*$/, 'Nama PIC tidak valid'),
+  // CWE-601: digits and + only
+  whatsapp: z.string().regex(/^[0-9+]{9,20}$/, 'Nomor WhatsApp tidak valid'),
+  kota: z.string().min(2, 'Kota harus diisi').max(100).regex(/^[^\r\n]*$/, 'Kota tidak valid'),
   produk: z.string().min(1, 'Pilih minimal satu produk').max(500),
   kapasitas: z.string().max(100).optional(),
   moq: z.string().max(100).optional(),
@@ -15,7 +20,24 @@ const supplierSchema = z.object({
   pengalaman: z.string().min(10, 'Ceritakan sedikit pengalaman Anda').max(3000),
 })
 
+// CWE-345: reject requests from unexpected origins in production
+function isValidOrigin(request: NextRequest): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (!siteUrl) return true
+  const origin = request.headers.get('origin')
+  if (!origin) return false
+  try {
+    return new URL(origin).origin === new URL(siteUrl).origin
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   try {
     const body = await request.json()
     const parsed = supplierSchema.safeParse(body)
@@ -55,7 +77,7 @@ export async function POST(request: NextRequest) {
       const esc = escapeHtml
       await sendEmail({
         to: adminEmail,
-        subject: `[Sragam] Pendaftaran supplier baru: ${d.nama_bisnis} (${d.kota})`,
+        subject: `[Sragam] Pendaftaran supplier baru: ${safeForSubject(d.nama_bisnis)} (${safeForSubject(d.kota)})`,
         html: `
           <div style="font-family:sans-serif;max-width:600px;margin:0 auto">
             <h2 style="color:#1e40af">Pendaftaran Supplier Baru</h2>

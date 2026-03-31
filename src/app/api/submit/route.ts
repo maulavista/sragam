@@ -3,19 +3,27 @@ import { z } from 'zod'
 import { createServiceClient, createSessionClient } from '@/lib/supabase-server'
 import { sendEmail, escapeHtml } from '@/lib/email'
 
+// CWE-93: strip newlines from any value used in email subjects
+const safeForSubject = (s: string) => s.replace(/[\r\n]/g, ' ')
+
 const orderItemSchema = z.object({
   jenis_seragam: z.string().min(1).max(100),
   jumlah: z.string().min(1).max(10),
-  ukuran: z.record(z.number().min(0).max(99999)).optional(),
+  // CWE-400: cap number of size keys to prevent memory exhaustion
+  ukuran: z.record(z.string().max(10), z.number().min(0).max(99999))
+    .refine(obj => Object.keys(obj).length <= 20, 'Terlalu banyak ukuran')
+    .optional(),
   bahan: z.string().max(100).optional(),
   metode_logo: z.string().max(100).optional(),
 })
 
 const orderSchema = z.object({
-  nama: z.string().min(2, 'Nama harus diisi').max(100),
-  whatsapp: z.string().min(9, 'Nomor WhatsApp harus diisi').max(20),
-  kota: z.string().min(2, 'Kota harus diisi').max(100),
-  nama_organisasi: z.string().max(150).optional(),
+  // CWE-93: disallow newlines in fields used in email subjects
+  nama: z.string().min(2, 'Nama harus diisi').max(100).regex(/^[^\r\n]*$/, 'Nama tidak valid'),
+  // CWE-601: digits and + only for WhatsApp
+  whatsapp: z.string().regex(/^[0-9+]{9,20}$/, 'Nomor WhatsApp tidak valid'),
+  kota: z.string().min(2, 'Kota harus diisi').max(100).regex(/^[^\r\n]*$/, 'Kota tidak valid'),
+  nama_organisasi: z.string().max(150).regex(/^[^\r\n]*$/, 'Nama organisasi tidak valid').optional(),
   jenis_organisasi: z.string().max(100).optional(),
   items: z.string().min(1, 'Produk harus dipilih'),
   anggaran: z.string().max(20).optional(),
@@ -23,7 +31,24 @@ const orderSchema = z.object({
   catatan: z.string().max(2000).optional(),
 })
 
+// CWE-345: reject requests from unexpected origins in production
+function isValidOrigin(request: NextRequest): boolean {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL
+  if (!siteUrl) return true // dev: no env var set, allow all
+  const origin = request.headers.get('origin')
+  if (!origin) return false // no origin header = not a browser request
+  try {
+    return new URL(origin).origin === new URL(siteUrl).origin
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: NextRequest) {
+  if (!isValidOrigin(request)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
   try {
     const formData = await request.formData()
 
@@ -77,7 +102,11 @@ export async function POST(request: NextRequest) {
     let desain_path: string | null = null
     const desainFile = formData.get('desain') as File | null
 
-    const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf']
+    // CWE-98: map extension → forced content type; never trust desainFile.type
+    const ALLOWED_MIME_TYPES: Record<string, string> = {
+      jpg: 'image/jpeg', jpeg: 'image/jpeg',
+      png: 'image/png', webp: 'image/webp', pdf: 'application/pdf',
+    }
     const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 
     if (desainFile && desainFile.size > 0) {
@@ -85,13 +114,14 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'File terlalu besar. Maksimal 5 MB.' }, { status: 400 })
       }
       const ext = (desainFile.name.split('.').pop() ?? '').toLowerCase()
-      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      const forcedContentType = ALLOWED_MIME_TYPES[ext]
+      if (!forcedContentType) {
         return NextResponse.json({ error: 'Format file tidak didukung. Gunakan JPG, PNG, atau PDF.' }, { status: 400 })
       }
       const safePath = `desain/${Date.now()}-${crypto.randomUUID()}.${ext}`
       const { error: uploadError } = await supabase.storage
         .from('order-designs')
-        .upload(safePath, desainFile, { contentType: desainFile.type })
+        .upload(safePath, desainFile, { contentType: forcedContentType })
       if (!uploadError) desain_path = safePath
     }
 
@@ -135,11 +165,10 @@ export async function POST(request: NextRequest) {
 
     if (itemsError) {
       console.error('DB items insert error:', itemsError)
-      // Order was created — don't fail the request, items can be added manually
     }
 
-    // Send email notifications
-    if (process.env.BREVO_API_KEY) {
+    // Send email notifications only if items were successfully saved (CWE-703)
+    if (process.env.BREVO_API_KEY && !itemsError) {
       const adminEmail = process.env.EMAIL_ADMIN
 
       const d = parsed.data
@@ -190,7 +219,8 @@ export async function POST(request: NextRequest) {
         promises.push(
           sendEmail({
             to: adminEmail,
-            subject: `[Sragam] Permintaan baru: ${itemsSummary} - ${d.nama}`,
+            // CWE-93: sanitize subject to prevent email header injection
+            subject: `[Sragam] Permintaan baru: ${safeForSubject(itemsSummary)} - ${safeForSubject(d.nama)}`,
             html: `
               <div style="font-family:sans-serif;max-width:640px;margin:0 auto">
                 <h2 style="color:#1e40af">Permintaan Seragam Baru</h2>

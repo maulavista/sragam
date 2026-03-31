@@ -37,7 +37,7 @@ export async function sendEmail({ to, subject, html }: SendEmailOptions): Promis
   })
 
   if (!res.ok) {
-    const text = await res.text()
-    throw new Error(`Brevo error ${res.status}: ${text}`)
+    // CWE-522: do not log raw Brevo response — may echo back API key or internal details
+    throw new Error(`Brevo error ${res.status}: email send failed`)
   }
 }
